@@ -152,7 +152,7 @@ typedef enum
  #include "stm32100b_eval/stm32100b_eval.h"
 #elif defined USE_STM3210B_EVAL
  #include "stm32f10x.h"
- #include "stm3210b_eval/stm3210b_eval.h" 
+ #include "STM3210B_EVAL/stm3210b_eval.h" 
 #elif defined USE_STM3210E_EVAL
  #include "stm32f10x.h"
  #include "stm3210e_eval/stm3210e_eval.h"

@@ -1,56 +1,118 @@
-#include <stm32f10x.h>
-#include <stm32f10x_gpio.h>
-#include <stm32f10x_rcc.h>
-#include <stm32f10x_usart.h>
+#include "stm32f10x.h"
+#include "usart.h"
+#include <stdio.h>
 
+#ifdef __GNUC__
+  /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
+     set to 'Yes') calls __io_putchar() */
+  #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+  #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
 
-void assert_failed(uint8_t* file, uint32_t line) { }
-
-
-void USART_Config()
+/*
+void STM_EVAL_LEDInit(Led_TypeDef Led)
 {
-    GPIO_InitTypeDef gpio;
-    USART_InitTypeDef usart;
+  GPIO_InitTypeDef  GPIO_InitStructure;
+  
+  // Enable the GPIO_LED Clock 
+  RCC_APB2PeriphClockCmd(GPIO_CLK[Led], ENABLE);
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOA, ENABLE);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-    gpio.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_1;
-    gpio.GPIO_Mode = GPIO_Mode_AF_PP;
-    gpio.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &gpio);
+  // Configure the GPIO_LED pin 
+  GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
-    gpio.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_0;
-    gpio.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOA, &gpio);
-
-    USART_StructInit(&usart);
-    usart.USART_BaudRate = 115200;
-    usart.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-    usart.USART_WordLength = USART_WordLength_8b;
-    usart.USART_StopBits = USART_StopBits_1;
-    usart.USART_Parity = USART_Parity_No;
-    usart.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_Init(USART2, &usart);
-    USART_Cmd(USART2, ENABLE);
-
-
+  GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
 }
 
-void usart_putc(char ch)
+void STM_EVAL_LEDOn(Led_TypeDef Led)
 {
-    while(USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET);
-    USART2->DR = (ch & 0xff);
+  GPIO_PORT[Led]->BSRR = GPIO_PIN[Led];     
 }
-void usart_send(const char*s)
+
+void STM_EVAL_LEDOff(Led_TypeDef Led)
 {
-    while(*s)
-        usart_putc(*s++);
+  GPIO_PORT[Led]->BRR = GPIO_PIN[Led];  
 }
+*/
+
+
+/**
+  * @brief  Retargets the C library printf function to the USART.
+  * @param  None
+  * @retval None
+  */
+PUTCHAR_PROTOTYPE
+{
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the USART */
+  USART_SendData(USART1, (uint8_t) ch);
+  /* Loop until the end of transmission */
+  while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
+  {}
+  return ch;
+}
+
+void debug_log(char *str)
+{
+	int i,len;
+	char c;
+	len = strlen(str);
+	for(i = 0; i< len; i++){
+  		USART_SendData(USART1, (uint8_t) c);
+  		while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET){;}
+	}
+}
+
+#ifdef  USE_FULL_ASSERT
+
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *   where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t* file, uint32_t line)
+{ 
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* Infinite loop */
+  while (1)
+  {
+  }
+}
+#endif
+
+
+
 
 int main(void)
 {
-    USART_Config();
-    usart_send("Hello World!");
-    while(1){}
+    USART1_Config();//
+    /*
+    printf("*************************************************************\r\n");
+    printf("*                                                           *\r\n");
+    printf("* Thank you for using The Development Board Of YuanDi ! ^_^ *\r\n");
+    printf("*                                                           *\r\n");
+    printf("*************************************************************\r\n");
+    */
+    debug_log("start control led\n");
+    while (1)
+    {
+      while (USART_GetFlagStatus(USART1,USART_FLAG_RXNE) == RESET);
+      USART_SendData(USART1,USART_ReceiveData(USART1));
+    }
 }
+
+
+
+/*********************************************************************************************************
+      END FILE
+*********************************************************************************************************/
+
+
+
+
 

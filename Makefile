@@ -27,18 +27,22 @@ PERIPH_SRC_PATH=$(TOP)/libs/STSW-STM32054/STM32F10x_StdPeriph_Lib_V3.5.0/Librari
 C_SRC+= $(PERIPH_SRC_PATH)/stm32f10x_rcc.c
 C_SRC+= $(PERIPH_SRC_PATH)/stm32f10x_gpio.c
 C_SRC+= $(PERIPH_SRC_PATH)/stm32f10x_usart.c
-C_SRC+= $(PERIPH_SRC_PATH)/misc.c
+#C_SRC+= $(PERIPH_SRC_PATH)/misc.c
 CFLAGS+= -D USE_STDPERIPH_DRIVER
+#=====================================================================================================================================================
 
-#=========add by embbnux  根据你的stm32芯片型号容量不同,修改这个地方的TypeOfMCU=======#
+#=========  根据你的stm32芯片型号容量不同,修改这个地方=======#
 #see CMSIS file "stm32f10x.h" ,search STM32F10X_MD ...
 CFLAGS+= -D STM32F10X_MD
 ASM_SRC+= $(TOP)/libs/STSW-STM32054/STM32F10x_StdPeriph_Lib_V3.5.0/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s
-#=========== ld file 
+#== ld file 
 #MY_LD_FILE_NAME=stm32f103rbt6.ld
 MY_LD_FILE_NAME=libs/STSW-STM32054/STM32F10x_StdPeriph_Lib_V3.5.0/Project/STM32F10x_StdPeriph_Template/TrueSTUDIO/STM3210B-EVAL/stm32_flash.ld
-#======================================================================
-
+#== Utilities eval 
+#CFLAGS+= -D USE_STM3210B_EVAL
+#C_SRC+= $(TOP)/libs/STSW-STM32054/STM32F10x_StdPeriph_Lib_V3.5.0/Utilities/STM32_EVAL/stm32_eval.c
+#INC_FLAGS+= -I $(TOP)/libs/STSW-STM32054/STM32F10x_StdPeriph_Lib_V3.5.0/Utilities/STM32_EVAL
+#============================================================#
 #my src
 INC_FLAGS+= -I $(TOP)/src    
 C_SRC+= $(shell find $(TOP)/src -name '*.c')
@@ -46,19 +50,14 @@ C_SRC+= $(shell find $(TOP)/src -name '*.c')
 
 CFLAGS+=$(COMMONFLAGS) -W -Wall $(INC_FLAGS) -fno-common -fno-builtin -ffreestanding
 CFLAGS+= -nostdlib
-CFLAGS+= $(DEBUG_FLAGS)
+CFLAGS+= -Wl,--gc-sections,-T$(MY_LD_FILE_NAME)
+#CFLAGS+= $(DEBUG_FLAGS)
+#CFLAGS+= -O0  -D __MICROLIB
 CFLAGS+= -Wl,--whole-archive
 
-#LDFLAGS=$(COMMONFLAGS) ${DEBUG_FLAGS} -nostartfiles -L$(LIBDIR) -nostartfiles -Wl,--gc-sections,-T$(MY_LD_FILE_NAME)
-#LDLIBS+= -lm -lc
-
-LDFLAGS+=${DEBUG_FLAGS}
-LDFLAGS+= -nostartfiles -T $(MY_LD_FILE_NAME)
-
-
-#CFLAGS+=-D VECT_TAB_FLASH
-#CFLAGSlib+=-c
-#CFLAGS+=-lc
+#LDFLAGS+=${DEBUG_FLAGS}
+LDFLAGS+= -nostartfiles 
+#-T $(MY_LD_FILE_NAME)
 
 
 
@@ -77,8 +76,8 @@ ASM_DEP=$(ASM_SRC:%.s=%.adep)
 all:$(C_DEP) $(ASM_DEP) $(C_OBJ) $(ASM_OBJ)
 	@for i in $(shell find $(OUT_DIR) -name '*.*');do if [ -e $${i} ];then rm $${i};fi;done
 	$(CC) $(C_OBJ) $(ASM_OBJ) -o $(OUT_DIR)/$(TARGET).elf $(LDFLAGS)
-	$(OBJCOPY) $(OUT_DIR)/$(TARGET).elf  $(OUT_DIR)/$(TARGET).bin -Obinary 
-	$(OBJCOPY) $(OUT_DIR)/$(TARGET).elf  $(OUT_DIR)/$(TARGET).hex -Oihex
+	$(OBJCOPY) $(OUT_DIR)/$(TARGET).elf  $(OUT_DIR)/$(TARGET).bin -O binary 
+	$(OBJCOPY) $(OUT_DIR)/$(TARGET).elf  $(OUT_DIR)/$(TARGET).hex -O ihex
 ###################################
 %.cdep:%.c
 	$(CC) -MM $< > $@ $(CFLAGS)

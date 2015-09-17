@@ -44,7 +44,7 @@
 #ifdef USE_STM32100B_EVAL
  #include "stm32100b_eval/stm32100b_eval.c"
 #elif defined USE_STM3210B_EVAL
- #include "stm3210b_eval/stm3210b_eval.c" 
+ #include "STM3210B_EVAL/stm3210b_eval.c" 
 #elif defined USE_STM3210E_EVAL
  #include "stm3210e_eval/stm3210e_eval.c"
 #elif defined USE_STM3210C_EVAL
